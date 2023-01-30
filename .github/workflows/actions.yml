@@ -1,0 +1,23 @@
+name: learn-github-actions
+run-name: ${{ github.actor }} is learning Cocotb
+on: [push]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v3
+      - run: sudo apt install -y --no-install-recommends iverilog
+      - run: pip3 install cocotb cocotb-bus cocotb-coverage
+      - run: make -C tests && mv tests/results.xml tests/orig.xml
+      - run: cp hdl/delayed_dut.v hdl/dut.v && make -C tests && mv tests/results.xml tests/delayed_dut.xml
+      - uses: actions/upload-artifact@v3
+        with:
+          name: waveform
+          path: tests/*.vcd
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v3
+        if: always() # always run even if the previous step fails
+        with:
+          report_paths: '**/tests/*.xml'
