@@ -18,12 +18,12 @@ async def ifc_test(dut):
     OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
     for i in range(20):
-    writelist=[]
-    writeaddr = random.randint(0,5)
-    writelist.append(writeaddr)
-    writedata = random.randint(0, 1)
-    writelist.append(writedata)    
-    writedrv.append(writelist)
+        writelist=[]
+        writeaddr = random.randint(0,5)
+        writelist.append(writeaddr)
+        writedata = random.randint(0, 1)
+        writelist.append(writedata)    
+        writedrv.append(writelist)
     
  class InputDriver(BusDriver):
     _signals = ['address', 'data', 'en', 'rdy']
@@ -47,6 +47,25 @@ async def ifc_test(dut):
         self.bus.en.value = 0
         await NextTimeStep()
         
+class IO_Monitor(BusMonitor):
+    _signals = ['rdy', 'en', 'data']
+
+    async def _monitor_recv(self):
+        fallingedge = FallingEdge(self.clock)
+        rdonly = ReadOnly()
+        phases = {
+            0: 'Idle',
+            1: 'Rdy',
+            3: 'Txn'
+        }
+        prev = 'Idle'
+        while True:
+            await fallingedge
+            await rdonly
+            txn = (self.bus.en.value << 1) | self.bus.rdy.value
+            self._recv({'previous': prev, 'current': phases[txn]})
+            prev = phases[txn]
+
  class OutputDriver(BusDriver):
     _signals = ['address', 'data', 'en', 'rdy']
 
