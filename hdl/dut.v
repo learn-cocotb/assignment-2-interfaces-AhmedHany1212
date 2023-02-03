@@ -35,7 +35,7 @@
   `define BSV_RESET_EDGE negedge
 `endif
 
-module dut(CLK,
+module ifc_rtl(CLK,
 	   RST_N,
 
 	   write_address,
