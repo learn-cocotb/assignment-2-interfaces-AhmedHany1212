@@ -50,7 +50,7 @@ async def ifc_test(dut):
         await NextTimeStep()
         
 class IO_Monitor(BusMonitor):
-    _signals = ['rdy', 'en', 'data']
+    _signals = ['address', 'data', 'en', 'rdy']
 
     async def _monitor_recv(self):
         fallingedge = FallingEdge(self.clock)
