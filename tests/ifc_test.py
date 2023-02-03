@@ -6,6 +6,8 @@ from cocotb_bus.monitors import BusMonitor
 import os
 import random
 
+global case
+case=1
 def sb_fn(actual_value):
     print("Recived value=",actual_value)
 @cocotb.test()
@@ -28,6 +30,8 @@ async def ifc_test(dut):
         writedrv.append(writelist)
         
         readaddr = random.randint(0,5)        
+        if case==1:
+            readaddr = 0
         readdrv.append(readaddr)
         
         await FallingEdge(dut.CLK)
@@ -47,9 +51,13 @@ class InputDriver(BusDriver):
         if self.bus.rdy.value != 1:
             await RisingEdge(self.bus.rdy)
         self.bus.en.value = 1
+        if case==1:
+            self.bus.en.value = 0
         self.bus.address.value = value[0]
         self.bus.data.value = value[1]        
         await ReadOnly()
+        if case==1:
+            assert self.bus.data.value==1,f"incorrect case 1"
         await RisingEdge(self.clk)
         self.bus.en.value = 0
         await NextTimeStep()
@@ -89,9 +97,15 @@ class OutputDriver(BusDriver):
         if self.bus.rdy.value != 1:
             await RisingEdge(self.bus.rdy)
         self.bus.en.value = 1
-        self.bus.address.value = value     
+        if case==2:
+            self.bus.en.value = 0
+        self.bus.address.value = value  
+        if case==2:
+            self.bus.address.value = 2
         await ReadOnly()
         self.callback(self.bus.data.value)
+        if case==2:
+            assert self.bus.data.value==1,f"incorrect case 2"
         await RisingEdge(self.clk)
         await NextTimeStep()
         self.bus.en.value = 0
