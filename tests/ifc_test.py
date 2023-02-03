@@ -6,6 +6,8 @@ from cocotb_bus.monitors import BusMonitor
 import os
 import random
 
+def sb_fn(actual_value):
+    print("Recived value=",actual_value)
 @cocotb.test()
 async def ifc_test(dut):
     dut.RST_N.value = 1
@@ -89,6 +91,3 @@ class IO_Monitor(BusMonitor):
             await NextTimeStep()
             self.bus.en.value = 0
                
-
-
-
