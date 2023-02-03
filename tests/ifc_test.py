@@ -17,17 +17,22 @@ async def ifc_test(dut):
     await RisingEdge(dut.CLK)
     dut.RST_N.value = 1
     writedrv = InputDriver(dut, 'write', dut.CLK)
-    OutputDriver(dut, 'read', dut.CLK, sb_fn)
+    readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
-    for i in range(20):
+    for i in range(50):
         writelist=[]
         writeaddr = random.randint(0,5)
         writelist.append(writeaddr)
         writedata = random.randint(0, 1)
         writelist.append(writedata)    
         writedrv.append(writelist)
+        
+        readaddr = random.randint(0,5)        
+        readdrv.append(readaddr)
+        
+        await FallingEdge(dut.CLK)
     
- class InputDriver(BusDriver):
+class InputDriver(BusDriver):
     _signals = ['address', 'data', 'en', 'rdy']
 
     def __init__(self, dut, name, clk):
@@ -68,26 +73,27 @@ class IO_Monitor(BusMonitor):
             self._recv({'previous': prev, 'current': phases[txn]})
             prev = phases[txn]
 
- class OutputDriver(BusDriver):
+class OutputDriver(BusDriver):
     _signals = ['address', 'data', 'en', 'rdy']
-
-    def __init__(self, dut, name, clk, sb_callback):
+    def __init__(self, dut, name, clk,sb_callback):
         BusDriver.__init__(self, dut, name, clk)
         self.bus.en.value = 0
         self.clk = clk
         self.callback = sb_callback
-        self.append(0)
+        
 
     async def _driver_send(self, value, sync=True):
-        while True:
-            for i in range(random.randint(0, 20)):
-                await RisingEdge(self.clk)
-            if self.bus.rdy.value != 1:
-                await RisingEdge(self.bus.rdy)
-            self.bus.en.value = 1
-            await ReadOnly()
-            self.callback(self.bus.data.value)
+
+        for i in range(random.randint(0, 20)):
             await RisingEdge(self.clk)
-            await NextTimeStep()
-            self.bus.en.value = 0
-               
+        if self.bus.rdy.value != 1:
+            await RisingEdge(self.bus.rdy)
+        self.bus.en.value = 1
+        self.bus.address.value = value     
+        await ReadOnly()
+        self.callback(self.bus.data.value)
+        await RisingEdge(self.clk)
+        await NextTimeStep()
+        self.bus.en.value = 0
+
+
