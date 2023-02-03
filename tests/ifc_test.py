@@ -7,7 +7,6 @@ import os
 import random
 
 global case
-case=2
 def sb_fn(actual_value):
     print("Recived value=",actual_value)
 @cocotb.test()
