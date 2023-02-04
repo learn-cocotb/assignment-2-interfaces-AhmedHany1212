@@ -36,9 +36,6 @@ def cover(a, b):
 
 @cocotb.test()
 async def ifc_test(dut):
-    dut.ifc_rtl.a_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
-    dut.ifc_rtl.b_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
-    dut.ifc_rtl.y_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
 
     dut.RST_N.value = 1
     await Timer(1, 'ns')
