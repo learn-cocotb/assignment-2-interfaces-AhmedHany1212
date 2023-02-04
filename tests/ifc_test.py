@@ -43,7 +43,7 @@ async def ifc_test(dut):
     await RisingEdge(dut.CLK)
     dut.RST_N.value = 1
     writedrv = InputDriver(dut, 'write', dut.CLK)
-    InputMonitor(dut, 'write', dut.CLK, callback=write_cover)
+    InputMonitor(dut, 'a', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
     for i in range(50):
