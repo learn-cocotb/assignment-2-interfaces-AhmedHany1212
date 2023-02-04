@@ -7,7 +7,7 @@ import os
 import random
 
 global case
-case=2
+case=0
 def sb_fn(actual_value):
     print("Recived value=",actual_value)
     
@@ -46,7 +46,7 @@ async def ifc_test(dut):
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
-    for i in range(50):
+    for i in range(200):
         writelist=[]
         writeaddr = random.randint(0,5)
         writelist.append(writeaddr)
