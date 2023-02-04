@@ -127,7 +127,7 @@ class OutputDriver(BusDriver):
         self.bus.en.value = 0
 
 class InputMonitor(BusMonitor):
-    _signals = ['rdy', 'en', 'data']
+    _signals = ['address', 'data', 'en', 'rdy']
 
     async def _monitor_recv(self):
         fallingedge = FallingEdge(self.clock)
