@@ -32,7 +32,7 @@ async def ifc_test(dut):
         readaddr = random.randint(0,5)        
         if case==1:
             readaddr = 0
-        if case==3 | case==4:
+        if case==2 | case==3:
             readaddr = 3
 
         readdrv.append(readaddr)
@@ -57,9 +57,9 @@ class InputDriver(BusDriver):
         if case==1:
             self.bus.en.value = 0
         self.bus.address.value = value[0]
-        if case==3:
+        if case==2:
             self.bus.address.value = 7
-        if case==4:
+        if case==3:
             self.bus.address.value = 0
         self.bus.data.value = value[1]        
         await ReadOnly()
@@ -102,19 +102,13 @@ class OutputDriver(BusDriver):
         if self.bus.rdy.value != 1:
             await RisingEdge(self.bus.rdy)
         self.bus.en.value = 1
-        if case==2:
-            self.bus.en.value = 0
         self.bus.address.value = value  
-        if case==2:
-            self.bus.address.value = 2
         await ReadOnly()
         self.callback(self.bus.data.value)
         if case==1:
             assert self.bus.data.value==1,f"incorrect case 1"
-        if case==3 | case==4:
-            assert self.bus.data.value==0,f"incorrect case 3"
-        if case==2:
-            assert self.bus.data.value==1,f"incorrect case 2"
+        if case==2 | case==3:
+            assert self.bus.data.value==0,f"incorrect case 2"
         await RisingEdge(self.clk)
         await NextTimeStep()
         self.bus.en.value = 0
