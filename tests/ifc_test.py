@@ -132,19 +132,18 @@ class InputMonitor(BusMonitor):
     async def _monitor_recv(self):
         fallingedge = FallingEdge(self.clock)
         rdonly = ReadOnly()
-        prev_state = 'Idle'
-        state = {
+        phases = {
             0: 'Idle',
-            1: 'RDY',
-            2: 'Error',
-            3: "Txn"
+            1: 'Rdy',
+            3: 'Txn'
         }
+        prev = 'Idle'
         while True:
             await fallingedge
             await rdonly
-            s = state[self.bus.rdy.value | (self.bus.en.value << 1)]
-            self._recv({'current': s, 'previous': prev_state})
-            prev_state = s
+            txn = (self.bus.en.value << 1) | self.bus.rdy.value
+            self._recv({'previous': prev, 'current': phases[txn]})
+            prev = phases[txn]
 
 
 @CoverPoint(f"top.a.ifc_state",  # noqa F405
