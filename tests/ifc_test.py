@@ -36,6 +36,9 @@ def cover(a, b):
 
 @cocotb.test()
 async def ifc_test(dut):
+    dut.ifc_test.a_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
+    dut.ifc_test.b_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
+    dut.ifc_test.y_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
 
     dut.RST_N.value = 1
     await Timer(1, 'ns')
@@ -43,7 +46,7 @@ async def ifc_test(dut):
     await Timer(1, 'ns')
     await RisingEdge(dut.CLK)
     dut.RST_N.value = 1
-    writedrv = InpumtDriver(dut, 'write', dut.CLK)
+    writedrv = InputDriver(dut, 'write', dut.CLK)
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
