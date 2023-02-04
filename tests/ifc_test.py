@@ -13,25 +13,25 @@ def sb_fn(actual_value):
     
 
 
-@CoverPoint("top.write_cover",  # noqa F405
-            xf=lambda write_cover, b: write_cover,
+
+@CoverPoint("top.a",  # noqa F405
+            xf=lambda a, b: a,
             bins=[0, 1],
             bins_labels=['True', 'False']
             )
 @CoverPoint("top.b",  # noqa F405
-            xf=lambda write_cover, b: b,
+            xf=lambda a, b: b,
             bins=[0, 1],
             bins_labels=['True', 'False']
             )
 @CoverCross("top.cross.ab",
             items=["top.b",
-                   "top.write_cover"
+                   "top.a"
                    ]
             )
-def cover(write_cover, b):
+def cover(a, b):
     cocotb.log.info(f"AB={a} {b}")
     pass
-
 
 
 @cocotb.test()
@@ -147,19 +147,20 @@ class InputMonitor(BusMonitor):
             prev_state = s
 
 
-@CoverPoint(f"top.write.ifc_state",  # noqa F405
+@CoverPoint(f"top.a.ifc_state",  # noqa F405
             xf=lambda x: x['current'],
             bins=['Idle', 'RDY', 'Txn'],
             )
-@CoverPoint(f"top.write.previfc_state",  # noqa F405
+@CoverPoint(f"top.a.previfc_state",  # noqa F405
             xf=lambda x: x['previous'],
             bins=['Idle', 'RDY', 'Txn'],
             )
-@CoverCross("top.cross.ifc.write",
+@CoverCross("top.cross.ifc.a",
             items=[
-                "top.write.previfc_state", "top.write.ifc_state"
+                "top.a.previfc_state", "top.a.ifc_state"
             ]
             )
 def a_cover(state):
     cocotb.log.warning(f"state={state}")
     pass
+
