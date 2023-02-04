@@ -63,10 +63,6 @@ class InputDriver(BusDriver):
             self.bus.address.value = 0
         self.bus.data.value = value[1]        
         await ReadOnly()
-        if case==1:
-            assert self.bus.data.value==1,f"incorrect case 1"
-        if case==3 | case==4:
-            assert self.bus.data.value==0,f"incorrect case 3"
         await RisingEdge(self.clk)
         self.bus.en.value = 0
         await NextTimeStep()
@@ -113,6 +109,10 @@ class OutputDriver(BusDriver):
             self.bus.address.value = 2
         await ReadOnly()
         self.callback(self.bus.data.value)
+        if case==1:
+            assert self.bus.data.value==1,f"incorrect case 1"
+        if case==3 | case==4:
+            assert self.bus.data.value==0,f"incorrect case 3"
         if case==2:
             assert self.bus.data.value==1,f"incorrect case 2"
         await RisingEdge(self.clk)
