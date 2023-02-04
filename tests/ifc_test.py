@@ -45,7 +45,21 @@ async def ifc_test(dut):
     writedrv = InputDriver(dut, 'write', dut.CLK)
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
-    
+    assert dut.ifc_test.y_ff.D_IN==dut.ifc_test.a_ff.D_OUT|dut.ifc_test.b_ff.D_OUT
+    #if self.bus.address.value==3:
+     #   temp=dut.ifc_test.y_ff.D_IN
+     #   await Timer(5, 'ns')
+     #   assert self.bus.data.value== temp
+    if dut.write_address.value==4:
+       assert dut.ifc_test.a_ff.D_OUT.FULL_N==1
+       assert dut.ifc_test.y_ff.D_OUT.FULL_N==1
+    if dut.write_address.value==5:
+       assert dut.ifc_test.b_ff.D_OUT.FULL_N==1
+       assert dut.ifc_test.y_ff.D_OUT.FULL_N==1
+
+    #dut.ifc_test.a_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
+    #dut.ifc_test.b_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
+    #dut.ifc_test.y_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
     if case==4:
         dut.write_en.value=1
         dut.read_en.value=1
@@ -166,22 +180,6 @@ class OutputDriver(BusDriver):
         self.bus.address.value = value  
         await ReadOnly()
         self.callback(self.bus.data.value)
-        assert dut.ifc_test.y_ff.D_IN==dut.ifc_test.a_ff.D_OUT|dut.ifc_test.b_ff.D_OUT
-        #if self.bus.address.value==3:
-         #   temp=dut.ifc_test.y_ff.D_IN
-         #   await Timer(5, 'ns')
-         #   assert self.bus.data.value== temp
-        if dut.write_address.value==4:
-           assert dut.ifc_test.a_ff.D_OUT.FULL_N==1
-           assert dut.ifc_test.y_ff.D_OUT.FULL_N==1
-        if dut.write_address.value==5:
-           assert dut.ifc_test.b_ff.D_OUT.FULL_N==1
-           assert dut.ifc_test.y_ff.D_OUT.FULL_N==1
-
-    #dut.ifc_test.a_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
-    #dut.ifc_test.b_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
-    #dut.ifc_test.y_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
-
         if case==1:
             assert self.bus.data.value==1,f"incorrect case 1"
         if case==2 | case==3:
