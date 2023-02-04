@@ -12,39 +12,27 @@ def sb_fn(actual_value):
     print("Recived value=",actual_value)
     
 
-@CoverPoint("top.a",  # noqa F405
-            xf=lambda x, y: x,
-            bins=[0, 1]
+
+@CoverPoint("top.write_cover",  # noqa F405
+            xf=lambda write_cover, b: write_cover,
+            bins=[0, 1],
+            bins_labels=['True', 'False']
             )
 @CoverPoint("top.b",  # noqa F405
-            xf=lambda x, y: y,
-            bins=[0, 1]
+            xf=lambda write_cover, b: b,
+            bins=[0, 1],
+            bins_labels=['True', 'False']
             )
 @CoverCross("top.cross.ab",
-            items=["top.a",
-                   "top.b"
+            items=["top.b",
+                   "top.write_cover"
                    ]
             )
-def ab_cover(a, b):
+def cover(write_cover, b):
+    cocotb.log.info(f"AB={a} {b}")
     pass
 
 
-@CoverPoint("top.prot.a.current",  # noqa F405
-            xf=lambda x: x['current'],
-            bins=['Idle', 'Rdy', 'Txn'],
-            )
-@CoverPoint("top.prot.a.previous",  # noqa F405
-            xf=lambda x: x['previous'],
-            bins=['Idle', 'Rdy', 'Txn'],
-            )
-@CoverCross("top.cross.a_prot.cross",
-            items=["top.prot.a.previous",
-                   "top.prot.a.current"
-                   ],
-            ign_bins=[('Rdy', 'Idle')]
-            )
-def a_prot_cover(txn):
-    pass
 
 @cocotb.test()
 async def ifc_test(dut):
@@ -55,6 +43,7 @@ async def ifc_test(dut):
     await RisingEdge(dut.CLK)
     dut.RST_N.value = 1
     writedrv = InputDriver(dut, 'write', dut.CLK)
+    InputMonitor(dut, 'write', dut.CLK, callback=write_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
     for i in range(50):
@@ -74,7 +63,13 @@ async def ifc_test(dut):
         readdrv.append(readaddr)
         
         await FallingEdge(dut.CLK)
-    
+
+    coverage_db.report_coverage(cocotb.log.info, bins=True)
+    coverage_file = os.path.join(
+        os.getenv('RESULT_PATH', "./"), 'coverage.xml')
+    coverage_db.export_to_xml(filename=coverage_file)
+
+
 class InputDriver(BusDriver):
     _signals = ['address', 'data', 'en', 'rdy']
 
@@ -103,24 +98,6 @@ class InputDriver(BusDriver):
         self.bus.en.value = 0
         await NextTimeStep()
         
-class IO_Monitor(BusMonitor):
-    _signals = ['address', 'data', 'en', 'rdy']
-
-    async def _monitor_recv(self):
-        fallingedge = FallingEdge(self.clock)
-        rdonly = ReadOnly()
-        phases = {
-            0: 'Idle',
-            1: 'Rdy',
-            3: 'Txn'
-        }
-        prev = 'Idle'
-        while True:
-            await fallingedge
-            await rdonly
-            txn = (self.bus.en.value << 1) | self.bus.rdy.value
-            self._recv({'previous': prev, 'current': phases[txn]})
-            prev = phases[txn]
 
 class OutputDriver(BusDriver):
     _signals = ['address', 'data', 'en', 'rdy']
@@ -149,4 +126,40 @@ class OutputDriver(BusDriver):
         await NextTimeStep()
         self.bus.en.value = 0
 
+class InputMonitor(BusMonitor):
+    _signals = ['rdy', 'en', 'data']
 
+    async def _monitor_recv(self):
+        fallingedge = FallingEdge(self.clock)
+        rdonly = ReadOnly()
+        prev_state = 'Idle'
+        state = {
+            0: 'Idle',
+            1: 'RDY',
+            2: 'Error',
+            3: "Txn"
+        }
+        while True:
+            await fallingedge
+            await rdonly
+            s = state[self.bus.rdy.value | (self.bus.en.value << 1)]
+            self._recv({'current': s, 'previous': prev_state})
+            prev_state = s
+
+
+@CoverPoint(f"top.write.ifc_state",  # noqa F405
+            xf=lambda x: x['current'],
+            bins=['Idle', 'RDY', 'Txn'],
+            )
+@CoverPoint(f"top.write.previfc_state",  # noqa F405
+            xf=lambda x: x['previous'],
+            bins=['Idle', 'RDY', 'Txn'],
+            )
+@CoverCross("top.cross.ifc.write",
+            items=[
+                "top.write.previfc_state", "top.write.ifc_state"
+            ]
+            )
+def a_cover(state):
+    cocotb.log.warning(f"state={state}")
+    pass
