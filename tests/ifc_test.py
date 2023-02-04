@@ -166,17 +166,17 @@ class OutputDriver(BusDriver):
         self.bus.address.value = value  
         await ReadOnly()
         self.callback(self.bus.data.value)
-        assert dut.ifc_test.y_ff.D_IN=dut.ifc_test.a_ff.D_OUT|dut.ifc_test.b_ff.D_OUT
+        assert dut.ifc_test.y_ff.D_IN==dut.ifc_test.a_ff.D_OUT|dut.ifc_test.b_ff.D_OUT
         #if self.bus.address.value==3:
          #   temp=dut.ifc_test.y_ff.D_IN
          #   await Timer(5, 'ns')
          #   assert self.bus.data.value== temp
         if dut.write_address.value==4:
-           assert dut.ifc_test.a_ff.D_OUT.FULL_N=1
-           assert dut.ifc_test.y_ff.D_OUT.FULL_N=1
+           assert dut.ifc_test.a_ff.D_OUT.FULL_N==1
+           assert dut.ifc_test.y_ff.D_OUT.FULL_N==1
         if dut.write_address.value==5:
-           assert dut.ifc_test.b_ff.D_OUT.FULL_N=1
-           assert dut.ifc_test.y_ff.D_OUT.FULL_N=1
+           assert dut.ifc_test.b_ff.D_OUT.FULL_N==1
+           assert dut.ifc_test.y_ff.D_OUT.FULL_N==1
 
     #dut.ifc_test.a_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
     #dut.ifc_test.b_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
