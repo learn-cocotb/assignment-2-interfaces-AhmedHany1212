@@ -10,6 +10,42 @@ global case
 case=2
 def sb_fn(actual_value):
     print("Recived value=",actual_value)
+    
+
+@CoverPoint("top.a",  # noqa F405
+            xf=lambda x, y: x,
+            bins=[0, 1]
+            )
+@CoverPoint("top.b",  # noqa F405
+            xf=lambda x, y: y,
+            bins=[0, 1]
+            )
+@CoverCross("top.cross.ab",
+            items=["top.a",
+                   "top.b"
+                   ]
+            )
+def ab_cover(a, b):
+    pass
+
+
+@CoverPoint("top.prot.a.current",  # noqa F405
+            xf=lambda x: x['current'],
+            bins=['Idle', 'Rdy', 'Txn'],
+            )
+@CoverPoint("top.prot.a.previous",  # noqa F405
+            xf=lambda x: x['previous'],
+            bins=['Idle', 'Rdy', 'Txn'],
+            )
+@CoverCross("top.cross.a_prot.cross",
+            items=["top.prot.a.previous",
+                   "top.prot.a.current"
+                   ],
+            ign_bins=[('Rdy', 'Idle')]
+            )
+def a_prot_cover(txn):
+    pass
+
 @cocotb.test()
 async def ifc_test(dut):
     dut.RST_N.value = 1
