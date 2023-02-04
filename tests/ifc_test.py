@@ -7,7 +7,7 @@ import os
 import random
 
 global case
-case=0
+case=4
 def sb_fn(actual_value):
     print("Recived value=",actual_value)
     
@@ -46,7 +46,37 @@ async def ifc_test(dut):
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
-    for i in range(200):
+    if case==4:
+        dut.write_en.value=1
+        dut.read_en.value=1
+        dut.write_address.value=4
+        dut.write_data.value=1      
+        await RisingEdge(dut.CLK)
+        dut.write_address.value=4
+        dut.write_data.value=0 
+        await RisingEdge(dut.CLK)
+        dut.write_address.value=5
+        dut.write_data.value=0
+        dut.read_address.value=3
+        await RisingEdge(dut.CLK)
+        await RisingEdge(dut.CLK)
+        await RisingEdge(dut.CLK)
+        assert dut.read_data.value==1,f"CASE 4 failed"
+
+    if case==5:
+        dut.write_en.value=1
+        dut.read_en.value=1
+        dut.write_address.value=4
+        dut.write_data.value=1      
+        await RisingEdge(dut.CLK)
+        dut.write_address.value=5
+        dut.write_data.value=0 
+        await RisingEdge(dut.CLK)
+        dut.read_address.value=3
+        dut.RST_N.value=0
+        assert dut.read_data.value==0,f"CASE 5 failed"
+        
+    for i in range(50):
         writelist=[]
         writeaddr = random.randint(0,5)
         writelist.append(writeaddr)
@@ -136,6 +166,8 @@ class OutputDriver(BusDriver):
         self.bus.address.value = value  
         await ReadOnly()
         self.callback(self.bus.data.value)
+        #if self.bus.address.value:
+         #   assert self.bus.data.value== A|b
         if case==1:
             assert self.bus.data.value==1,f"incorrect case 1"
         if case==2 | case==3:
@@ -148,11 +180,11 @@ class OutputDriver(BusDriver):
 
 @CoverPoint(f"top.a.ifc_state",  # noqa F405
             xf=lambda x: x['current'],
-            bins=['Idle', 'RDY', 'Txn'],
+            bins=['Idle', 'rdy', 'Txn'],
             )
 @CoverPoint(f"top.a.previfc_state",  # noqa F405
             xf=lambda x: x['previous'],
-            bins=['Idle', 'RDY', 'Txn'],
+            bins=['Idle', 'Rdy', 'Txn'],
             )
 @CoverCross("top.cross.ifc.a",
             items=[
