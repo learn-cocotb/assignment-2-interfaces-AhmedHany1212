@@ -7,6 +7,7 @@ import os
 import random
 
 global case
+case=2
 def sb_fn(actual_value):
     print("Recived value=",actual_value)
 @cocotb.test()
@@ -31,6 +32,9 @@ async def ifc_test(dut):
         readaddr = random.randint(0,5)        
         if case==1:
             readaddr = 0
+        if case==3:
+            readaddr = 3
+
         readdrv.append(readaddr)
         
         await FallingEdge(dut.CLK)
@@ -53,10 +57,14 @@ class InputDriver(BusDriver):
         if case==1:
             self.bus.en.value = 0
         self.bus.address.value = value[0]
+        if case==3:
+            self.bus.address.value = 7
         self.bus.data.value = value[1]        
         await ReadOnly()
         if case==1:
             assert self.bus.data.value==1,f"incorrect case 1"
+        if case==3:
+            assert self.bus.data.value==0,f"incorrect case 3"
         await RisingEdge(self.clk)
         self.bus.en.value = 0
         await NextTimeStep()
