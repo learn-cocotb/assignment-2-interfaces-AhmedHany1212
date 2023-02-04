@@ -43,7 +43,7 @@ async def ifc_test(dut):
     await RisingEdge(dut.CLK)
     dut.RST_N.value = 1
     writedrv = InputDriver(dut, 'write', dut.CLK)
-    InputMonitor(dut, 'a', dut.CLK, callback=a_cover)
+    InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
     
     for i in range(50):
@@ -98,6 +98,24 @@ class InputDriver(BusDriver):
         self.bus.en.value = 0
         await NextTimeStep()
         
+class InputMonitor(BusMonitor):
+    _signals = ['address', 'data', 'en', 'rdy']
+
+    async def _monitor_recv(self):
+        fallingedge = FallingEdge(self.clock)
+        rdonly = ReadOnly()
+        phases = {
+            0: 'Idle',
+            1: 'Rdy',
+            3: 'Txn'
+        }
+        prev = 'Idle'
+        while True:
+            await fallingedge
+            await rdonly
+            txn = (self.bus.en.value << 1) | self.bus.rdy.value
+            self._recv({'previous': prev, 'current': phases[txn]})
+            prev = phases[txn]
 
 class OutputDriver(BusDriver):
     _signals = ['address', 'data', 'en', 'rdy']
@@ -126,24 +144,6 @@ class OutputDriver(BusDriver):
         await NextTimeStep()
         self.bus.en.value = 0
 
-class InputMonitor(BusMonitor):
-    _signals = ['address', 'data', 'en', 'rdy']
-
-    async def _monitor_recv(self):
-        fallingedge = FallingEdge(self.clock)
-        rdonly = ReadOnly()
-        phases = {
-            0: 'Idle',
-            1: 'Rdy',
-            3: 'Txn'
-        }
-        prev = 'Idle'
-        while True:
-            await fallingedge
-            await rdonly
-            txn = (self.bus.en.value << 1) | self.bus.rdy.value
-            self._recv({'previous': prev, 'current': phases[txn]})
-            prev = phases[txn]
 
 
 @CoverPoint(f"top.a.ifc_state",  # noqa F405
