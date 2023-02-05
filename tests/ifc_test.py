@@ -45,18 +45,22 @@ async def ifc_test(dut):
     writedrv = InputDriver(dut, 'write', dut.CLK)
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
-    assert dut.dut.y_ff.D_IN.value==dut.dut.a_ff.D_OUT.value|dut.dut.b_ff.D_OUT.value,f"CASE  failed"
+    assert dut.dut.y_ff.D_IN.value==(dut.dut.a_ff.D_OUT.value | dut.dut.b_ff.D_OUT.value),f"CASE  failed"
     #if self.bus.address.value==3:
      #   temp=dut.ifc_test.y_ff.D_IN
      #   await Timer(5, 'ns')
      #   assert self.bus.data.value== temp
-    if dut.write_address.value==4:
+    
+    if dut.write_address.value==4&dut.write_en.value==1 :
         assert dut.dut.a_ff.FULL_N.value==1,f"CASE  failed"
-        assert dut.dut.y_ff.FULL_N.value==1,f"CASE  failed"
-    if dut.write_address.value==5:
+        assert dut.ifc_test.y_ff.FULL_N.value==1,f"CASE  failed"
+    if dut.write_address.value==5&dut.write_en.value==1:
         assert dut.dut.b_ff.FULL_N.value==1,f"CASE  failed"
         assert dut.dut.y_ff.FULL_N.value==1,f"CASE  failed"
 
+    #dut.ifc_test.a_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
+    #dut.ifc_test.b_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
+    #dut.ifc_test.y_ff(CLK,D_IN,ENQ,DEQ,CLR,D_OUT,FULL_N,EMPTY_N)
     if case==4:
         dut.write_en.value=1
         dut.read_en.value=1
