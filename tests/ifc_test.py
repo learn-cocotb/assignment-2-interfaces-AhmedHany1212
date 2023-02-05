@@ -50,12 +50,12 @@ async def ifc_test(dut):
      #   temp=dut.ifc_test.y_ff.D_IN
      #   await Timer(5, 'ns')
      #   assert self.bus.data.value== temp
-    #if dut.write_address.value==4:
-    #    assert dut.dut.a_ff.D_OUT.FULL_N.value==1,f"CASE  failed"
-    #    assert dut.dut.y_ff.D_OUT.FULL_N.value==1,f"CASE  failed"
-    #if dut.write_address.value==5:
-    #    assert dut.dut.b_ff.D_OUT.FULL_N.value==1,f"CASE  failed"
-    #    assert dut.dut.y_ff.D_OUT.FULL_N.value==1,f"CASE  failed"
+    if dut.write_address.value==4:
+        assert dut.dut.a_ff.FULL_N.value==1,f"CASE  failed"
+        assert dut.dut.y_ff.FULL_N.value==1,f"CASE  failed"
+    if dut.write_address.value==5:
+        assert dut.dut.b_ff.FULL_N.value==1,f"CASE  failed"
+        assert dut.dut.y_ff.FULL_N.value==1,f"CASE  failed"
 
     if case==4:
         dut.write_en.value=1
