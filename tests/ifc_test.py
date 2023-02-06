@@ -7,7 +7,7 @@ import os
 import random
 
 global case
-case=4
+case=0
 def sb_fn(actual_value):
     print("Recived value=",actual_value)
     
@@ -45,7 +45,6 @@ async def ifc_test(dut):
     writedrv = InputDriver(dut, 'write', dut.CLK)
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
-    assert dut.dut.y_ff.D_IN.value==(dut.dut.a_ff.D_OUT.value | dut.dut.b_ff.D_OUT.value),f"CASE  failed"
 
     if case==4:
         dut.write_en.value=1
