@@ -8,10 +8,18 @@ import random
 
 global case
 case=0
-def sb_fn(actual_value):
-    print("Recived value=",actual_value)
-    
 
+def sb_fn(actual_value,addr,dut):
+    if case==1:
+        assert actual_value==1,f"incorrect case 1"
+    if case==2 | case==3:
+        assert actual_value==0,f"incorrect case 2"
+    if dut.write_address.value==4:
+       assert dut.dut.a_ff.FULL_N.value==1,f"CASE  failed"
+       assert dut.dut.y_ff.FULL_N.value==1,f"CASE  failed"
+    if dut.write_address.value==5:
+       assert dut.dut.b_ff.FULL_N.value==1,f"CASE  failed"
+       assert dut.dut.y_ff.FULL_N.value==1,f"CASE  failed"
 
 
 @CoverPoint("top.a",  # noqa F405
@@ -42,11 +50,12 @@ async def ifc_test(dut):
     await Timer(1, 'ns')
     await RisingEdge(dut.CLK)
     dut.RST_N.value = 1
+   
     writedrv = InputDriver(dut, 'write', dut.CLK)
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
-
-    if case==4:
+    
+    if case==4: #overwrite in A fifo then test the result
         dut.write_en.value=1
         dut.read_en.value=1
         dut.write_address.value=4
@@ -63,7 +72,7 @@ async def ifc_test(dut):
         await RisingEdge(dut.CLK)
         assert dut.read_data.value==1,f"CASE 4 failed"
 
-    if case==5:
+    if case==5: #reset case
         dut.write_en.value=1
         dut.read_en.value=1
         dut.write_address.value=4
@@ -115,12 +124,12 @@ class InputDriver(BusDriver):
         if self.bus.rdy.value != 1:
             await RisingEdge(self.bus.rdy)
         self.bus.en.value = 1
-        if case==1:
+        if case==1: #input without enable
             self.bus.en.value = 0
         self.bus.address.value = value[0]
-        if case==2:
+        if case==2: #unreserved address
             self.bus.address.value = 7
-        if case==3:
+        if case==3: #write address with read enable
             self.bus.address.value = 0
         self.bus.data.value = value[1]        
         await ReadOnly()
@@ -154,7 +163,7 @@ class OutputDriver(BusDriver):
         self.bus.en.value = 0
         self.clk = clk
         self.callback = sb_callback
-        
+        self.dut=dut
 
     async def _driver_send(self, value, sync=True):
 
@@ -165,11 +174,7 @@ class OutputDriver(BusDriver):
         self.bus.en.value = 1
         self.bus.address.value = value  
         await ReadOnly()
-        self.callback(self.bus.data.value)
-        if case==1:
-            assert self.bus.data.value==1,f"incorrect case 1"
-        if case==2 | case==3:
-            assert self.bus.data.value==0,f"incorrect case 2"
+        self.callback(self.bus.data.value,self.bus.address.value,self.dut)
         await RisingEdge(self.clk)
         await NextTimeStep()
         self.bus.en.value = 0
