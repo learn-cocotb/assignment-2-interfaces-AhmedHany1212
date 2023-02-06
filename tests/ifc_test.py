@@ -9,7 +9,7 @@ import random
 global case
 case=0
 
-def sb_fn(actual_value,addr,dut):
+def sb_fn(actual_value,dut):
     if case==1:
         assert actual_value==1,f"incorrect case 1"
     if case==2 | case==3:
@@ -174,7 +174,7 @@ class OutputDriver(BusDriver):
         self.bus.en.value = 1
         self.bus.address.value = value  
         await ReadOnly()
-        self.callback(self.bus.data.value,self.bus.address.value,self.dut)
+        self.callback(self.bus.data.value,self.dut)
         await RisingEdge(self.clk)
         await NextTimeStep()
         self.bus.en.value = 0
