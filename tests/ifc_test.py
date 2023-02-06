@@ -7,11 +7,19 @@ import os
 import random
 
 global case
-case=4
-def sb_fn(actual_value):
-    print("Recived value=",actual_value)
-    
+case=0
 
+def sb_fn(actual_value,addr,dut):
+    if case==1:
+        assert actual_value==1,f"incorrect case 1"
+    if case==2 | case==3:
+        assert actual_value==0,f"incorrect case 2"
+    if dut.write_address.value==4:
+       assert dut.test_dut.a_ff.FULL_N.value==1,f"CASE  failed"
+       assert dut.ifc_test.y_ff.FULL_N.value==1,f"CASE  failed"
+    if dut.write_address.value==5:
+       assert dut.test_dut.b_ff.FULL_N.value==1,f"CASE  failed"
+       assert dut.test_dut.y_ff.FULL_N.value==1,f"CASE  failed"
 
 
 @CoverPoint("top.a",  # noqa F405
@@ -42,22 +50,11 @@ async def ifc_test(dut):
     await Timer(1, 'ns')
     await RisingEdge(dut.CLK)
     dut.RST_N.value = 1
+   
     writedrv = InputDriver(dut, 'write', dut.CLK)
     InputMonitor(dut, 'write', dut.CLK, callback=a_cover)
     readdrv=OutputDriver(dut, 'read', dut.CLK, sb_fn)
-    assert dut.dut.y_ff.D_IN.value==(dut.dut.a_ff.D_OUT.value | dut.dut.b_ff.D_OUT.value),f"CASE  failed"
-    #if self.bus.address.value==3:
-     #   temp=dut.ifc_test.y_ff.D_IN
-     #   await Timer(5, 'ns')
-     #   assert self.bus.data.value== temp
     
-    #if dut.write_address.value==4&dut.write_en.value==1 :
-    #    assert dut.dut.a_ff.FULL_N.value==1,f"CASE  failed"
-    #    assert dut.ifc_test.y_ff.FULL_N.value==1,f"CASE  failed"
-    #if dut.write_address.value==5&dut.write_en.value==1:
-    #    assert dut.dut.b_ff.FULL_N.value==1,f"CASE  failed"
-    #    assert dut.dut.y_ff.FULL_N.value==1,f"CASE  failed"
-
     if case==4:
         dut.write_en.value=1
         dut.read_en.value=1
@@ -166,7 +163,7 @@ class OutputDriver(BusDriver):
         self.bus.en.value = 0
         self.clk = clk
         self.callback = sb_callback
-        
+        self.dut=dut
 
     async def _driver_send(self, value, sync=True):
 
@@ -177,11 +174,7 @@ class OutputDriver(BusDriver):
         self.bus.en.value = 1
         self.bus.address.value = value  
         await ReadOnly()
-        self.callback(self.bus.data.value)
-        if case==1:
-            assert self.bus.data.value==1,f"incorrect case 1"
-        if case==2 | case==3:
-            assert self.bus.data.value==0,f"incorrect case 2"
+        self.callback(self.bus.data.value,self.bus.address.value,self.dut)
         await RisingEdge(self.clk)
         await NextTimeStep()
         self.bus.en.value = 0
